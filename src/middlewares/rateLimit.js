@@ -8,16 +8,30 @@
  * @returns {Function} middleware de Express
  */
 function createRateLimit({ windowMs = 60000, max = 100 } = {}) {
-  // Almacena contadores: Map<ip, { count, resetAt }>
   const store = new Map();
 
   return function rateLimitMiddleware(req, res, next) {
-    // TODO: implementar
-    // 1. Obtén la IP del cliente (req.ip)
-    // 2. Comprueba si existe en el store y si la ventana ha expirado
-    // 3. Incrementa el contador
-    // 4. Si supera el max, responde 429 con header Retry-After
-    // 5. Si no, añade headers informativos y llama a next()
+    const ip = req.ip;
+    const now = Date.now();
+
+    let entry = store.get(ip);
+
+    if (!entry || now > entry.resetAt) {
+      entry = { count: 1, resetAt: now + windowMs };
+      store.set(ip, entry);
+    } else {
+      entry.count++;
+    }
+
+    if (entry.count > max) {
+      const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
+      res.set("Retry-After", retryAfter);
+
+      return res.status(429).json({
+        error: "Too many requests",
+      });
+    }
+
     next();
   };
 }
