@@ -12,12 +12,28 @@
  */
 function sanitize(allowedFields) {
   return function sanitizeMiddleware(req, res, next) {
-    if (req.body && typeof req.body === 'object') {
-      // TODO: implementar
-      // 1. Recorta espacios en todos los valores string (trim)
-      // 2. Elimina campos cuyo valor sea null o undefined
-      // 3. Si allowedFields está definido, elimina los campos que no estén en la lista
+    if (req.body && typeof req.body === "object") {
+      for (const key in req.body) {
+        let value = req.body[key];
+
+        if (typeof value === "string") {
+          value = value.trim();
+        }
+
+        if (value === null || value === undefined) {
+          delete req.body[key];
+          continue;
+        }
+
+        if (allowedFields && !allowedFields.includes(key)) {
+          delete req.body[key];
+          continue;
+        }
+
+        req.body[key] = value;
+      }
     }
+
     next();
   };
 }

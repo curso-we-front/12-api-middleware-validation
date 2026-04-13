@@ -6,31 +6,60 @@
  */
 
 const required = () => (value) => {
-  // TODO: falla si value es null, undefined o string vacío
+  
+  if (value === null || value === undefined || value === "") {
+    return "El valor es requerido";
+  }
+  return null;
 };
 
 const minLength = (min) => (value) => {
-  // TODO
+  if (value === null || value.length < min) {
+    return `Debe tener al menos ${min} caracteres`;
+  }
+  return null;
 };
 
 const maxLength = (max) => (value) => {
-  // TODO
+  if (value === null || value.length > max) {
+    return `Debe tener como máximo ${max} caracteres`;
+  }
+  return null;
 };
 
 const isNumber = () => (value) => {
-  // TODO
+  if (typeof value !== "number") {
+    return "El tipo de dato debe ser numérico";
+  }
+  return null;
 };
 
 const min = (minimum) => (value) => {
-  // TODO
+  if (value == null || value < minimum) {
+    return `El mínimo es ${minimum}`;
+  }
+  return null;
 };
 
 const max = (maximum) => (value) => {
-  // TODO
+  if (value == null || value > maximum) {
+    return `El máximo es ${maximum}`;
+  }
+  return null;
 };
 
 const isEmail = () => (value) => {
-  // TODO: validación básica con regex
+  if (value == null) {
+    return null;
+  }
+
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!regex.test(value)) {
+    return "Debe ser un email válido";
+  }
+
+  return null;
 };
 
 /**
@@ -43,7 +72,20 @@ const isEmail = () => (value) => {
  * @returns {Object} errors
  */
 function validate(data, schema) {
-  // TODO
+  const errors = {};
+
+  for (const field in schema) {
+    for (const validator of schema[field]) {
+      const error = validator(data[field]);
+
+      if (error) {
+        errors[field] = error;
+        break;
+      }
+    }
+  }
+
+  return errors;
 }
 
 /**
@@ -54,8 +96,24 @@ function validate(data, schema) {
  */
 function validateBody(schema) {
   return (req, res, next) => {
-    // TODO
+    const errors = validate(req.body, schema);
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(422).json({ errors });
+    }
+
+    next();
   };
 }
 
-module.exports = { required, minLength, maxLength, isNumber, min, max, isEmail, validate, validateBody };
+module.exports = {
+  required,
+  minLength,
+  maxLength,
+  isNumber,
+  min,
+  max,
+  isEmail,
+  validate,
+  validateBody,
+};
