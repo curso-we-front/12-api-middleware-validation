@@ -1,61 +1,86 @@
-/**
- * Tarea 2: Sistema de validación declarativo.
- *
- * Cada validador es una función que recibe el valor
- * y devuelve un mensaje de error (string) o null si es válido.
- */
-
 const required = () => (value) => {
-  // TODO: falla si value es null, undefined o string vacío
-};
+  if (value === null || value === undefined || value === "") {
+    return "Requirement error"
+  }
+  return null
+}
 
 const minLength = (min) => (value) => {
-  // TODO
-};
+  if (value.length < min) {
+    return `Minimum length ${min}`
+  }
+  return null
+}
 
 const maxLength = (max) => (value) => {
-  // TODO
-};
+  if (value.length > max) {
+    return `Maximum length is ${max}`
+  }
+  return null
+}
 
 const isNumber = () => (value) => {
-  // TODO
-};
+  if (typeof value !== "number") {
+    return "Value must be a number"
+  }
+  return null
+}
 
 const min = (minimum) => (value) => {
-  // TODO
-};
+  if (value < minimum) {
+    return `Minimum is ${minimum}`
+  }
+  return null
+}
 
 const max = (maximum) => (value) => {
-  // TODO
-};
+  if (value > maximum) {
+    return `Maximum is ${maximum}`
+  }
+  return null
+}
 
 const isEmail = () => (value) => {
-  // TODO: validación básica con regex
-};
-
-/**
- * Ejecuta el schema de validación sobre el objeto data.
- * Devuelve un objeto con los errores: { campo: 'mensaje' }
- * Si no hay errores, devuelve {}
- *
- * @param {Object} data
- * @param {Object} schema - { campo: [validador1, validador2, ...] }
- * @returns {Object} errors
- */
-function validate(data, schema) {
-  // TODO
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!regex.test(value)) {
+    return `Invalid email`
+  }
+  return null
 }
 
-/**
- * Tarea 3: Middleware que usa validate() y responde 422 si hay errores.
- *
- * @param {Object} schema
- * @returns {Function} middleware
- */
+function validate(data, schema) {
+  const errors = {}
+  for (const field in schema) {
+    for (const validator of schema[field]) {
+      const error = validator(data[field])
+      if (error) {
+        errors[field] = error
+        break
+      }
+    }
+  }
+  return errors
+}
+
 function validateBody(schema) {
   return (req, res, next) => {
+    const errors = validate(req.body, schema)
+    if (Object.keys(errors).length > 0) {
+      return res.status(422).json({ errors })
+    }
+    next()
     // TODO
-  };
+  }
 }
 
-module.exports = { required, minLength, maxLength, isNumber, min, max, isEmail, validate, validateBody };
+module.exports = {
+  required,
+  minLength,
+  maxLength,
+  isNumber,
+  min,
+  max,
+  isEmail,
+  validate,
+  validateBody,
+}
